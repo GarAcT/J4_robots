@@ -3,7 +3,9 @@
 #define HEIGHT 21
 #define WIDTH  63
 
+void init_stage(int *stage);
 void clear_stage(int *stage);
+
 void disp_stage(int *stage);
 void print_horizontal_frame(int length);
 
@@ -11,9 +13,21 @@ int main(void)
 {
   int stage[HEIGHT*WIDTH];
 
-  clear_stage(stage);
+  init_stage(stage);
 
   disp_stage(stage);
+}
+
+void init_stage(int *stage)
+{
+  int player_x, player_y;
+
+  clear_stage(stage);
+
+  player_y = HEIGHT/2;
+  player_x = WIDTH/2;
+  stage[player_y*WIDTH + player_x] = 1;
+
 }
 
 void clear_stage(int *stage)
@@ -36,6 +50,9 @@ void disp_stage(int *stage)
       switch(stage[y*WIDTH + x]){
         case 0:
           printf(" ");
+          break;
+        case 1:
+          printf("@");
           break;
         default:
           printf("%d", stage[y*WIDTH + x]);
