@@ -19,9 +19,8 @@ typedef struct NODE {
 } entity_t;
 
 
-entity_t *init_stage(int *stage);
 void clear_stage(int *stage);
-entity_t *init_entity(int *stage, int enemy_num);
+entity_t *init_entity(int enemy_num);
 
 void disp_stage(int *stage);
 void print_horizontal_frame(int length);
@@ -39,20 +38,14 @@ int main(void)
   int stage[HEIGHT*WIDTH];
   entity_t *entity_list;
 
-  entity_list = init_stage(stage);
+  clear_stage(stage);
+  entity_list = init_entity(5);
 
   disp_stage(stage);
 
   show_entity(entity_list);
 }
 
-
-entity_t *init_stage(int *stage)
-{
-  clear_stage(stage);
-
-  return init_entity(stage, 5);
-}
 
 void clear_stage(int *stage)
 {
@@ -63,33 +56,22 @@ void clear_stage(int *stage)
   }
 }
 
-entity_t *init_entity(int *stage, int enemy_num)
+entity_t *init_entity(int enemy_num)
 {
   int i;
+  int array[HEIGHT*WIDTH];
   entity_t *list;
 
-  stage[0] = 1;
-  for(i = 1; i < enemy_num+1; i++){
-    stage[i] = 2;
+  for(i = 0; i < HEIGHT*WIDTH; i++){
+    array[i] = i;
   }
-  shuffle(stage);
+  shuffle(array);
 
   list = new_entity_list();
-  for(i = 0; i < HEIGHT*WIDTH; i++){
-    switch(stage[i]){
-      case 2:
-        add_entity(list, i, 2);
-        break;
-      case 1:
-        list->x = i % WIDTH;
-        list->y = i / WIDTH;
-        break;
-      case 0:
-        break;
-      default:
-        puts("ERROR: There is entity not initializable in stage");
-        return NULL;
-    }
+  list->x = array[0] % WIDTH;
+  list->y = array[0] / WIDTH;
+  for(i = 1; i <= enemy_num; i++){
+    add_entity(list, array[i], 2);
   }
 
   return list;
