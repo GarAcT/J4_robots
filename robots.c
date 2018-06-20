@@ -21,6 +21,7 @@ typedef struct NODE {
 
 void clear_stage(int *stage);
 entity_t *init_entity(int enemy_num);
+void place_entity(entity_t *list, int *stage);
 
 void disp_stage(int *stage);
 void print_horizontal_frame(int length);
@@ -40,6 +41,7 @@ int main(void)
 
   clear_stage(stage);
   entity_list = init_entity(5);
+  place_entity(entity_list, stage);
 
   disp_stage(stage);
 
@@ -75,6 +77,20 @@ entity_t *init_entity(int enemy_num)
   }
 
   return list;
+}
+
+void place_entity(entity_t *list, int *stage)
+{
+  entity_t *p;
+  int pos;
+
+  p = list;
+  while(p->entity_id != 0){
+    pos = p->y*WIDTH + p->x;
+    stage[pos] = p->entity_id;
+
+    p = p->next;
+  }
 }
 
 
