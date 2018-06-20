@@ -1,33 +1,57 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define HEIGHT 21
 #define WIDTH  63
+#define MAX_ENEMY (HEIGHT*WIDTH / 3)
 
-void init_stage(int *stage);
+#define MIN(x,y) ((x<y) ? x : y)
+
+
+typedef struct NODE {
+  struct NODE *prev;
+  struct NODE *next;
+
+  int entity_id;
+  int x;
+  int y;
+} entity_t;
+
+
+entity_t *init_stage(int *stage);
 void clear_stage(int *stage);
+entity_t *init_entity(int *stage, int enemy_num);
 
 void disp_stage(int *stage);
 void print_horizontal_frame(int length);
 
+void shuffle(int *array);
+
+entity_t *new_entity_list();
+void add_entity(entity_t *list, int pos, int id);
+
+void show_entity(entity_t *list);
+
+
 int main(void)
 {
   int stage[HEIGHT*WIDTH];
+  entity_t *entity_list;
 
-  init_stage(stage);
+  entity_list = init_stage(stage);
 
   disp_stage(stage);
+
+  show_entity(entity_list);
 }
 
-void init_stage(int *stage)
-{
-  int player_x, player_y;
 
+entity_t *init_stage(int *stage)
+{
   clear_stage(stage);
 
-  player_y = HEIGHT/2;
-  player_x = WIDTH/2;
-  stage[player_y*WIDTH + player_x] = 1;
-
+  return init_entity(stage, 5);
 }
 
 void clear_stage(int *stage)
@@ -38,6 +62,39 @@ void clear_stage(int *stage)
     stage[i] = 0;
   }
 }
+
+entity_t *init_entity(int *stage, int enemy_num)
+{
+  int i;
+  entity_t *list;
+
+  stage[0] = 1;
+  for(i = 1; i < enemy_num+1; i++){
+    stage[i] = 2;
+  }
+  shuffle(stage);
+
+  list = new_entity_list();
+  for(i = 0; i < HEIGHT*WIDTH; i++){
+    switch(stage[i]){
+      case 2:
+        add_entity(list, i, 2);
+        break;
+      case 1:
+        list->x = i % WIDTH;
+        list->y = i / WIDTH;
+        break;
+      case 0:
+        break;
+      default:
+        puts("ERROR: There is entity not initializable in stage");
+        return NULL;
+    }
+  }
+
+  return list;
+}
+
 
 void disp_stage(int *stage)
 {
@@ -53,6 +110,9 @@ void disp_stage(int *stage)
           break;
         case 1:
           printf("@");
+          break;
+        case 2:
+          printf("+");
           break;
         default:
           printf("%d", stage[y*WIDTH + x]);
@@ -73,4 +133,71 @@ void print_horizontal_frame(int length)
     printf("-");
   }
   printf("+\n");
+}
+
+
+void shuffle(int *array)
+{
+  int i,j;
+  int tmp;
+
+  srand((unsigned)time(NULL));
+
+  for(i = 0; i < HEIGHT*WIDTH; i++){
+    j = rand()%(HEIGHT*WIDTH);
+    tmp = array[i];
+    array[i] = array[j];
+    array[j] = tmp;
+  }
+}
+
+
+entity_t *new_entity_list()
+{
+  entity_t *head = (entity_t *)malloc(sizeof(entity_t));
+
+  head->prev = NULL;
+  head->next = (entity_t *)malloc(sizeof(entity_t));
+  head->entity_id = 1;  // 双方向リストの操作を簡略化するため両端にダミーが必要だが、Entityの中ではプレイヤー数は絶対に1つ（もしくは1つ以上）なので、先頭をプレイヤーノードにする
+  head->x = -1;
+  head->y = -1; // プレイヤーの位置が定義されていないことを明示するために-1で示す
+
+  head->next->prev = head;
+  head->next->next = NULL;
+  head->next->entity_id = 0; // 終端ノード
+
+  return head;
+}
+
+void add_entity(entity_t *list, int pos, int id)
+{
+  entity_t *node = (entity_t *)malloc(sizeof(entity_t));
+
+  node->x = pos % WIDTH;
+  node->y = pos / WIDTH;
+  node->entity_id = id;
+  node->prev = list;
+  node->next = list->next;
+
+  node->prev->next = node;
+  node->next->prev = node;
+}
+
+void show_entity(entity_t *list)
+{
+  entity_t *p;
+  int i;
+
+  p = list;
+  i = 0;
+  while(p != NULL){
+    printf("[node-%d]:\n", i);
+    printf("  entity ID: %d\n", p->entity_id);
+    printf("  x: %d\n", p->x);
+    printf("  y: %d\n", p->y);
+    printf("\n");
+
+    p = p->next;
+    i++;
+  }
 }
